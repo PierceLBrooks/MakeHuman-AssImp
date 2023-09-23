@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<buildster directory="build" distribution="../Distribution">
+  <project directory="../Project">
+    <dependencies>
+      <dependency>
+        <label>assimp</label>
+        <subpath>build</subpath>
+        <remote>
+          <url>https://github.com/assimp/assimp.git</url>
+          <git_repo>
+            <branch>master</branch>
+            <credentials>
+              <username>username</username>
+              <password>password</password>
+            </credentials>
+          </git_repo>
+        </remote>
+        <build>
+          <arguments></arguments>
+          <cmake>
+            <generator>
+              <switch id="BUILDSTER_OS">
+                <case check="Windows">MinGW Makefiles</case>
+                <case check="Linux">Unix Makefiles</case>
+                <case check="Darwin">Xcode</case>
+                <default><quit></quit></default>
+              </switch>
+            </generator>
+            <source>..</source>
+          </cmake>
+        </build>
+        <exports>
+          <export type="all">
+            <key>ASSIMP_PATH</key>
+            <value><install></install></value>
+          </export>
+          <export type="headers">
+            <key>ASSIMP_INCLUDE_PATH</key>
+            <value><install></install>/include</value>
+          </export>
+          <export type="libraries">
+            <key>ASSIMP_LIBRARIES_PATH</key>
+            <value><install></install>/lib</value>
+          </export>
+        </exports>
+        <imports></imports>
+      </dependency>
+    </dependencies>
+    <targets>
+      <target type="executable">
+        <label>makehuman</label>
+        <generator>
+          <switch id="BUILDSTER_OS">
+            <case check="Windows">MinGW Makefiles</case>
+            <case check="Linux">Unix Makefiles</case>
+            <case check="Darwin">Xcode</case>
+            <default><quit></quit></default>
+          </switch>
+        </generator>
+        <definitions></definitions>
+        <links>
+          <link>*assimp*</link>
+        </links>
+        <imports>
+          <import>assimp</import>
+        </imports>
+      </target>
+    </targets>
+  </project>
+</buildster>
