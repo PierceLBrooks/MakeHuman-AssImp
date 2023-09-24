@@ -16,13 +16,19 @@
           </git_repo>
         </remote>
         <build>
-          <arguments></arguments>
+          <arguments>
+            <argument>-DCMAKE_POLICY_DEFAULT_CMP0074=NEW</argument>
+            <argument>-DASSIMP_BUILD_ZLIB=ON</argument>
+            <argument>-DASSIMP_BUILD_TESTS=OFF</argument>
+            <argument>-DASSIMP_BUILD_ASSIMP_TOOLS=OFF</argument>
+            <argument>-DASSIMP_WARNINGS_AS_ERRORS=OFF</argument>
+          </arguments>
           <cmake>
             <generator>
               <switch id="BUILDSTER_OS">
                 <case check="Windows">MinGW Makefiles</case>
                 <case check="Linux">Unix Makefiles</case>
-                <case check="Darwin">Xcode</case>
+                <case check="Darwin">Unix Makefiles</case>
                 <default><quit></quit></default>
               </switch>
             </generator>
@@ -33,6 +39,10 @@
           <export type="all">
             <key>ASSIMP_PATH</key>
             <value><install></install></value>
+          </export>
+          <export type="headers">
+            <key>ASSIMP_CONTRIB_INCLUDE_PATH</key>
+            <value><origin></origin>/contrib</value>
           </export>
           <export type="headers">
             <key>ASSIMP_INCLUDE_PATH</key>
@@ -53,7 +63,7 @@
           <switch id="BUILDSTER_OS">
             <case check="Windows">MinGW Makefiles</case>
             <case check="Linux">Unix Makefiles</case>
-            <case check="Darwin">Xcode</case>
+            <case check="Darwin">Unix Makefiles</case>
             <default><quit></quit></default>
           </switch>
         </generator>
@@ -66,5 +76,30 @@
         </imports>
       </target>
     </targets>
+    <post timing="build">
+      <build>
+        <shells>
+          <shell>
+            <work><distribution></distribution></work>
+            <commands>
+              <command>
+                <switch id="BUILDSTER_OS">
+                  <case check="Windows">makehuman.exe <distribution></distribution>/../../base.bvh <distribution></distribution>/../../base.obj</case>
+                  <case check="Linux">./makehuman <distribution></distribution>/../../base.bvh <distribution></distribution>/../../base.obj</case>
+                  <case check="Darwin">./makehuman <distribution></distribution>/../../base.bvh <distribution></distribution>/../../base.obj</case>
+                  <default><quit></quit></default>
+                </switch>
+              </command>
+              <command>
+                <copy>
+                  <from><distribution></distribution>/makehuman.*</from>
+                  <to><distribution></distribution>/../../</to>
+                </copy>
+              </command>
+            </commands>
+          </shell>
+        </shells>
+      </build>
+    </post>
   </project>
 </buildster>
