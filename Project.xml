@@ -3,6 +3,47 @@
   <project directory="../Project">
     <dependencies>
       <dependency>
+        <label>glm</label>
+        <subpath>build</subpath>
+        <remote>
+          <url>https://github.com/PierceLBrooks/glm.git</url>
+          <git_repo>
+            <branch>0.9.9.5</branch>
+            <credentials>
+              <username>username</username>
+              <password>password</password>
+            </credentials>
+          </git_repo>
+        </remote>
+        <build>
+          <arguments>
+            <argument>-DGLM_TEST_ENABLE=OFF</argument>
+          </arguments>
+          <cmake>
+            <generator>
+              <switch id="BUILDSTER_OS">
+                <case check="Windows">MinGW Makefiles</case>
+                <case check="Linux">Unix Makefiles</case>
+                <case check="Darwin">Unix Makefiles</case>
+                <default><quit></quit></default>
+              </switch>
+            </generator>
+            <source>..</source>
+          </cmake>
+        </build>
+        <exports>
+          <export type="headers">
+            <key>GLM_INCLUDE_PATH</key>
+            <value><install></install>/include</value>
+          </export>
+          <export type="libraries">
+            <key>GLM_LIBRARIES_PATH</key>
+            <value><install></install>/lib</value>
+          </export>
+        </exports>
+        <imports></imports>
+      </dependency>
+      <dependency>
         <label>assimp</label>
         <subpath>build</subpath>
         <remote>
@@ -69,9 +110,11 @@
         </generator>
         <definitions></definitions>
         <links>
+          <link>*glm*</link>
           <link>*assimp*</link>
         </links>
         <imports>
+          <import>glm</import>
           <import>assimp</import>
         </imports>
       </target>

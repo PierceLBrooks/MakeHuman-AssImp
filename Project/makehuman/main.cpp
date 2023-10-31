@@ -10,6 +10,7 @@
 #include <assimp/SceneCombiner.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include "BvhLoader.hpp"
 
 int run(const std::vector<std::string>& args)
 {
@@ -43,6 +44,32 @@ int run(const std::vector<std::string>& args)
     scenes.push_back(importerRight->GetOrphanedScene());
     for (int i = 0; i < scenes.size(); ++i)
     {
+        std::string path = args[i+1];
+        if (path.size() > 4)
+        {
+            std::string extension = path.substr(path.size()-4);
+            if (extension == ".bvh")
+            {
+                mh::BvhLoader* loader = new mh::BvhLoader();
+                if (!loader->load(path))
+                {
+                    //std::cout << path << std::endl;
+                    delete loader;
+                    continue;
+                }
+                loader->visit(nullptr, [&](mh::Bone* bone){std::cout << "b," << bone->getName() << "," << bone->getTail().x << "," << bone->getTail().y << "," << bone->getTail().z << "," << bone->getHead().x << "," << bone->getHead().y << "," << bone->getHead().z << std::endl; return true;});
+                delete loader;
+            }
+            else
+            {
+                //std::cout << extension << std::endl;
+            }
+        }
+        /*for (int j = 0; j < scenes[i]->mNumAnimations; ++j)
+        {
+            const aiAnimation* animation = scenes[i]->mAnimations[j];
+            std::cout << animation->mTicksPerSecond << " @ " << j << std::endl;
+        }*/
         while (scenes[i]->mNumMeshes > 1)
         {
             scenes[i]->mNumMeshes -= 1;
@@ -62,7 +89,7 @@ int run(const std::vector<std::string>& args)
     {
         scene->mNumMeshes -= 1;
     }
-    for (int i = 0; i < scene->mNumMeshes; ++i)
+    /*for (int i = 0; i < scene->mNumMeshes; ++i)
     {
         aiMesh* mesh = scene->mMeshes[i];
         std::cout << "Mesh $ \"" << args[i+1] << "\" # " << i << " & " << mesh->mNumVertices << " ^ " << mesh->mNumFaces << std::endl;
@@ -81,7 +108,7 @@ int run(const std::vector<std::string>& args)
                 std::cout << "Weight @ " << weight->mVertexId << " = " << vertex->x << "," << vertex->y << "," << vertex->z << " | " << weight->mWeight << std::endl;
             }
         }
-    }
+    }*/
     if (exporter->Export(scene, "gltf2", std::string(args[0])+".gltf") != aiReturn_SUCCESS)
     {
         std::cout << exporter->GetErrorString() << std::endl;
@@ -109,13 +136,13 @@ int main(int argc, char** argv)
             continue;
         }
         args.push_back(std::string(argv[i]));
-        std::cout << args.back() << std::endl;
+        //std::cout << args.back() << std::endl;
     }
     if (argc >= 3)
     {
         result = run(args);
     }
-    std::cout << std::to_string(result) << std::endl;
+    //std::cout << std::to_string(result) << std::endl;
     return result;
 }
 
