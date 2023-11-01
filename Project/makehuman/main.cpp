@@ -11,6 +11,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include "BvhLoader.hpp"
+#include "VoxelGrid.hpp"
 
 int run(const std::vector<std::string>& args)
 {
@@ -57,7 +58,7 @@ int run(const std::vector<std::string>& args)
                     delete loader;
                     continue;
                 }
-                loader->visit(nullptr, [&](mh::Bone* bone){std::cout << "b," << bone->getName() << "," << bone->getTail().x << "," << bone->getTail().y << "," << bone->getTail().z << "," << bone->getHead().x << "," << bone->getHead().y << "," << bone->getHead().z << std::endl; return true;});
+                loader->visit(nullptr, [&](mh::BvhBone* bone){std::cout << "b," << bone->getName() << "," << bone->getTail().x << "," << bone->getTail().y << "," << bone->getTail().z << "," << bone->getHead().x << "," << bone->getHead().y << "," << bone->getHead().z << std::endl; return true;});
                 delete loader;
             }
             else
@@ -129,6 +130,34 @@ int main(int argc, char** argv)
 {
     int result = 0;
     std::vector<std::string> args;
+    if (argc == 11) {
+	    clock_t start, ends;
+	    start = time(NULL);
+
+	    std::string mesh_file = argv[1];
+	    std::string bone_file = argv[2];
+	    std::string weight_file = argv[3];
+	    int max_grid_num = atoi(argv[4]);
+	    int max_diffuse_loop = atoi(argv[5]);
+	    int max_sample_num = atoi(argv[6]);
+	    int max_influence = atoi(argv[7]);
+	    float max_fall_off = atof(argv[8]);
+	    int sharpness = atoi(argv[9]);
+	    std::string detect_solidify = argv[10];
+
+	    mh::VoxelGrid grid(mesh_file, bone_file, weight_file, max_grid_num, max_diffuse_loop, max_sample_num, max_influence, max_fall_off, sharpness, detect_solidify == "y");
+	    grid.calculate_all_voxel_darkness();
+	    grid.diffuse_all_heats();
+	    grid.generate_weight_for_vertices();
+	    grid.export_bone_weights();
+
+	    ends = time(NULL);
+	    int seconds_elapsed = (int)(ends - start);
+	    std::cout << "Running Time : " << seconds_elapsed / 60 << " minutes and "
+	              << seconds_elapsed % 60 << " seconds" << std::endl;
+
+	    return 0;
+    }
     for (int i = 0; i < argc; ++i)
     {
         if ((i != 0) && (strstr(argv[i], ".bvh") != NULL) && (strstr(argv[i], ".obj") != NULL))

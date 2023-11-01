@@ -1,8 +1,8 @@
 
-#include "Bone.hpp"
+#include "BvhBone.hpp"
 #include <iostream>
 
-mh::Bone::Bone()
+mh::BvhBone::BvhBone()
 {
     x = 0.0f;
     y = 0.0f;
@@ -18,7 +18,7 @@ mh::Bone::Bone()
 	parent = nullptr;
 }
 
-mh::Bone::~Bone()
+mh::BvhBone::~BvhBone()
 {
     if (channelOrder != nullptr)
     {
@@ -32,27 +32,27 @@ mh::Bone::~Bone()
     children.clear();
 }
 
-void mh::Bone::setName(const std::string& name)
+void mh::BvhBone::setName(const std::string& name)
 {
 	this->name = name;
 }
 
-void mh::Bone::setChannelCount(int channelCount)
+void mh::BvhBone::setChannelCount(int channelCount)
 {
 	this->channelCount = channelCount;
 }
 
-void mh::Bone::setIdentifier(int identifier)
+void mh::BvhBone::setIdentifier(int identifier)
 {
 	this->identifier = identifier;
 }
 
-int mh::Bone::getChannelCount() const
+int mh::BvhBone::getChannelCount() const
 {
 	return channelCount;
 }
 
-void mh::Bone::addChild(Bone* child)
+void mh::BvhBone::addChild(BvhBone* child)
 {
     if (child == nullptr)
     {
@@ -62,7 +62,7 @@ void mh::Bone::addChild(Bone* child)
 	children.push_back(child);
 }
 
-void mh::Bone::setPositions(const glm::mat4& modelMatrix)
+void mh::BvhBone::setPositions(const glm::mat4& modelMatrix)
 {
     /*const float* matrix = static_cast<const float*>(glm::value_ptr(modelMatrix));
     for (int i = 0; i < 16; ++i)
@@ -77,63 +77,63 @@ void mh::Bone::setPositions(const glm::mat4& modelMatrix)
     head = modelMatrix*glm::vec4(x, y, z, 1.0f);
 }
 
-void mh::Bone::setRotation(const glm::mat4& rotation)
+void mh::BvhBone::setRotation(const glm::mat4& rotation)
 {
 	this->rotation = rotation;
 }
 
-void mh::Bone::setTranslation(const glm::mat4& translation)
+void mh::BvhBone::setTranslation(const glm::mat4& translation)
 {
 	this->translation = translation;
 }
 
-void mh::Bone::setTranslation()
+void mh::BvhBone::setTranslation()
 {
 	glm::mat4 translation = glm::mat4(1.0f);
 	this->translation = glm::translate(translation, getPosition());
 }
 
-const glm::mat4& mh::Bone::getRotation() const
+const glm::mat4& mh::BvhBone::getRotation() const
 {
 	return rotation;
 }
 
-const glm::mat4& mh::Bone::getTranslation() const
+const glm::mat4& mh::BvhBone::getTranslation() const
 {
 	return translation;
 }
 
-const glm::vec4& mh::Bone::getHead() const
+const glm::vec4& mh::BvhBone::getHead() const
 {
     return head;
 }
 
-const glm::vec4& mh::Bone::getTail() const
+const glm::vec4& mh::BvhBone::getTail() const
 {
     return tail;
 }
 
-glm::vec3 mh::Bone::getPosition() const
+glm::vec3 mh::BvhBone::getPosition() const
 {
     return glm::vec3(x, y, z);
 }
 
-const std::string& mh::Bone::getName() const
+const std::string& mh::BvhBone::getName() const
 {
 	return name;
 }
 
-int mh::Bone::getIdentifier() const
+int mh::BvhBone::getIdentifier() const
 {
 	return identifier;
 }
 
-int mh::Bone::getChildCount() const
+int mh::BvhBone::getChildCount() const
 {
 	return children.size();
 }
 
-mh::Bone* mh::Bone::getChild(int index) const
+mh::BvhBone* mh::BvhBone::getChild(int index) const
 {
     if (getChildCount() < index)
     {
@@ -142,7 +142,7 @@ mh::Bone* mh::Bone::getChild(int index) const
 	return children[index];
 }
 
-mh::Bone* mh::Bone::getParent() const
+mh::BvhBone* mh::BvhBone::getParent() const
 {
     return parent;
 }

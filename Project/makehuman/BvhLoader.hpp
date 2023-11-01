@@ -4,7 +4,7 @@
 #include <string>
 #include <fstream>
 #include <functional>
-#include "Bone.hpp"
+#include "BvhBone.hpp"
 
 #define MH_BONE_X_POS 1
 #define MH_BONE_Y_POS 2
@@ -21,11 +21,11 @@ namespace mh
             double frameTime;
             bool status;
             std::ifstream* reader;
-            Bone* root;
+            BvhBone* root;
             void initialize();
             bool readBoneMotion(double* frameTime = nullptr);
-            Bone* readBoneRelation(std::ifstream& fileReader);
-            void setMotion(Bone* bone, int frameIndex, glm::mat4 modelMatrix);
+            BvhBone* readBoneRelation(std::ifstream& fileReader);
+            void setMotion(BvhBone* bone, int frameIndex, glm::mat4 modelMatrix);
         public:
             int ends;
             int boneCount;
@@ -38,13 +38,13 @@ namespace mh
             BvhLoader(const std::string& path);
             virtual ~BvhLoader();
             bool load(const std::string& path);
-            bool visit(Bone* bone, std::function<bool(Bone*)> visitor);
-            void setFrame(Bone* bone, int frameIndex);
+            bool visit(BvhBone* bone, std::function<bool(BvhBone*)> visitor);
+            void setFrame(BvhBone* bone, int frameIndex);
             void clearVisits();
-            void resetMatrices(Bone* bone = nullptr);
+            void resetMatrices(BvhBone* bone = nullptr);
             double getFrameTime() const;
             bool getValidity() const;
-            Bone* getRoot() const;
+            BvhBone* getRoot() const;
     };
 }
 

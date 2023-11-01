@@ -56,7 +56,7 @@ void mh::BvhLoader::initialize()
     visits = nullptr;
 }
 
-bool mh::BvhLoader::visit(Bone* bone, std::function<bool(Bone*)> visitor)
+bool mh::BvhLoader::visit(BvhBone* bone, std::function<bool(BvhBone*)> visitor)
 {
     if (bone == root)
     {
@@ -82,7 +82,7 @@ bool mh::BvhLoader::visit(Bone* bone, std::function<bool(Bone*)> visitor)
     visits[bone->getIdentifier()] += 1;
     for (int i = 0; i < bone->getChildCount(); ++i)
     {
-        Bone* child = bone->getChild(i);
+        BvhBone* child = bone->getChild(i);
         if (child == nullptr)
         {
             continue;
@@ -182,12 +182,12 @@ bool mh::BvhLoader::readBoneMotion(double* frameTime)
     return true;
 }
 
-mh::Bone* mh::BvhLoader::readBoneRelation(std::ifstream& reader)
+mh::BvhBone* mh::BvhLoader::readBoneRelation(std::ifstream& reader)
 {
     std::string temp1 = "";
     std::string temp2 = "";
     std::string temp3 = "";
-    Bone* newBone = new Bone();
+    BvhBone* newBone = new BvhBone();
     reader >> temp1;
     newBone->setName(temp1);
     newBone->setIdentifier(boneCount);
@@ -242,7 +242,7 @@ mh::Bone* mh::BvhLoader::readBoneRelation(std::ifstream& reader)
         }
         else if (temp1.compare("JOINT") == 0)
         {
-            Bone* childBone = readBoneRelation(reader);
+            BvhBone* childBone = readBoneRelation(reader);
             if (childBone != nullptr)
             {
                 newBone->addChild(childBone);
@@ -250,7 +250,7 @@ mh::Bone* mh::BvhLoader::readBoneRelation(std::ifstream& reader)
         }
         else if (temp1.compare("End") == 0)
         {
-            Bone* childBone = new Bone();
+            BvhBone* childBone = new BvhBone();
             childBone->setName(temp1+std::to_string(ends));
             childBone->setIdentifier(boneCount);
             ++ends;
@@ -285,7 +285,7 @@ void mh::BvhLoader::clearVisits()
     }
 }
 
-void mh::BvhLoader::resetMatrices(Bone* bone)
+void mh::BvhLoader::resetMatrices(BvhBone* bone)
 {
     if (bone == nullptr)
     {
@@ -304,7 +304,7 @@ void mh::BvhLoader::resetMatrices(Bone* bone)
     visits[bone->getIdentifier()] += 1;
     for (int i = 0; i < bone->getChildCount(); ++i)
     {
-        Bone* child = bone->getChild(i);
+        BvhBone* child = bone->getChild(i);
         if (child == nullptr)
         {
             continue;
@@ -316,7 +316,7 @@ void mh::BvhLoader::resetMatrices(Bone* bone)
     }
 }
 
-void mh::BvhLoader::setFrame(Bone* bone, int frameIndex)
+void mh::BvhLoader::setFrame(BvhBone* bone, int frameIndex)
 {
     if (bone == nullptr)
     {
@@ -333,7 +333,7 @@ void mh::BvhLoader::setFrame(Bone* bone, int frameIndex)
     setMotion(bone, frameIndex, glm::mat4(1.0f));
 }
 
-void mh::BvhLoader::setMotion(Bone* bone, int frameIndex, glm::mat4 modelMatrix)
+void mh::BvhLoader::setMotion(BvhBone* bone, int frameIndex, glm::mat4 modelMatrix)
 {
     if (motion == nullptr)
     {
@@ -395,7 +395,7 @@ void mh::BvhLoader::setMotion(Bone* bone, int frameIndex, glm::mat4 modelMatrix)
         visits[bone->getIdentifier()] += 1;
         for (int i = 0; i < bone->getChildCount(); ++i)
         {
-            Bone* child = bone->getChild(i);
+            BvhBone* child = bone->getChild(i);
             if (child == nullptr)
             {
                 continue;
@@ -418,7 +418,7 @@ bool mh::BvhLoader::getValidity() const
     return status;
 }
 
-mh::Bone* mh::BvhLoader::getRoot() const
+mh::BvhBone* mh::BvhLoader::getRoot() const
 {
     return root;
 }

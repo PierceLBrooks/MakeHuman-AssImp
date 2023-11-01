@@ -1,5 +1,5 @@
-#ifndef MH_BONE_HPP
-#define MH_BONE_HPP
+#ifndef MH_BVH_BONE_HPP
+#define MH_BVH_BONE_HPP
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -9,7 +9,7 @@
 
 namespace mh
 {
-    class Bone
+    class BvhBone
     {
         private:
 	        std::string name;
@@ -18,22 +18,22 @@ namespace mh
 	        glm::vec4 tail;
 	        glm::mat4 rotation;
 	        glm::mat4 translation;
-	        std::vector<Bone*> children;
+	        std::vector<BvhBone*> children;
 	        int channelCount;
 	    protected:
-	        Bone* parent;
+	        BvhBone* parent;
         public:
 	        float x;
 	        float y;
 	        float z;
 	        int* channelOrder;
-	        Bone();
-	        virtual ~Bone();
+	        BvhBone();
+	        virtual ~BvhBone();
 	        void setName(const std::string& name);
 	        void setChannelCount(int channelCount);
 	        void setIdentifier(int identifier);
 	        int getChannelCount() const;
-	        void addChild(Bone* child);
+	        void addChild(BvhBone* child);
 	        void setPositions(const glm::mat4& modelMatrix);
 	        void setRotation(const glm::mat4& rotation);
 	        void setTranslation(const glm::mat4& translation);
@@ -46,8 +46,8 @@ namespace mh
 	        const std::string& getName() const;
 	        int getIdentifier() const;
 	        int getChildCount() const;
-	        Bone* getChild(int index) const;
-	        Bone* getParent() const;
+	        BvhBone* getChild(int index) const;
+	        BvhBone* getParent() const;
     };
 }
 
