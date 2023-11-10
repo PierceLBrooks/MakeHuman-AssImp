@@ -12,6 +12,7 @@
 #include <assimp/scene.h>
 #include "BvhLoader.hpp"
 #include "VoxelGrid.hpp"
+#include "ObjModel.hpp"
 
 int run(const std::vector<std::string>& args)
 {
@@ -45,27 +46,6 @@ int run(const std::vector<std::string>& args)
     scenes.push_back(importerRight->GetOrphanedScene());
     for (int i = 0; i < scenes.size(); ++i)
     {
-        std::string path = args[i+1];
-        if (path.size() > 4)
-        {
-            std::string extension = path.substr(path.size()-4);
-            if (extension == ".bvh")
-            {
-                mh::BvhLoader* loader = new mh::BvhLoader();
-                if (!loader->load(path))
-                {
-                    //std::cout << path << std::endl;
-                    delete loader;
-                    continue;
-                }
-                loader->visit(nullptr, [&](mh::BvhBone* bone){std::cout << "b," << bone->getName() << "," << bone->getTail().x << "," << bone->getTail().y << "," << bone->getTail().z << "," << bone->getHead().x << "," << bone->getHead().y << "," << bone->getHead().z << std::endl; return true;});
-                delete loader;
-            }
-            else
-            {
-                //std::cout << extension << std::endl;
-            }
-        }
         /*for (int j = 0; j < scenes[i]->mNumAnimations; ++j)
         {
             const aiAnimation* animation = scenes[i]->mAnimations[j];
@@ -144,6 +124,62 @@ int main(int argc, char** argv)
 	    float max_fall_off = atof(argv[8]);
 	    int sharpness = atoi(argv[9]);
 	    std::string detect_solidify = argv[10];
+
+        if (bone_file.size() > 4)
+        {
+            std::string extension = bone_file.substr(bone_file.size()-4);
+            if (extension == ".bvh")
+            {
+                std::ofstream output;
+                mh::BvhLoader* loader = new mh::BvhLoader();
+                if (!loader->load(bone_file))
+                {
+                    //std::cout << path << std::endl;
+                    delete loader;
+                }
+                else
+                {
+                    extension = ".txt";
+                    output.open(bone_file+extension);
+                    if (!output.is_open())
+                    {
+                        delete loader;
+                    }
+                    else
+                    {
+                        loader->visit(nullptr, [&](mh::BvhBone* bone){output << "b," << bone->getName() << "," << bone->getTail().x << "," << bone->getTail().y << "," << bone->getTail().z << "," << bone->getHead().x << "," << bone->getHead().y << "," << bone->getHead().z << std::endl; return true;});
+                        output.close();
+                        delete loader;
+                        bone_file += extension;
+                    }
+                }
+            }
+        }
+        if (mesh_file.size() > 4)
+        {
+            std::string extension = mesh_file.substr(mesh_file.size()-4);
+            if (extension == ".obj")
+            {
+                mh::ObjModel* model = new mh::ObjModel();
+                if (!model->loadFromFile(mesh_file))
+                {
+                    delete model;
+                }
+                else
+                {
+                    extension = ".txt";
+                    if (!model->saveToFile(mesh_file+extension, true, false, false, true, ",", ",", ","))
+                    {
+                        delete model;
+                    }
+                    else
+                    {
+                        delete model;
+                        mesh_file += extension;
+                    }
+                }
+            }
+        }
 
 	    mh::VoxelGrid grid(mesh_file, bone_file, weight_file, max_grid_num, max_diffuse_loop, max_sample_num, max_influence, max_fall_off, sharpness, detect_solidify == "y");
 	    grid.calculate_all_voxel_darkness();
