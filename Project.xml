@@ -47,9 +47,9 @@
         <label>assimp</label>
         <subpath>build</subpath>
         <remote>
-          <url>https://github.com/assimp/assimp.git</url>
+          <url>https://github.com/PierceLBrooks/assimp.git</url>
           <git_repo>
-            <branch>master</branch>
+            <branch>pierce</branch>
             <credentials>
               <username>username</username>
               <password>password</password>

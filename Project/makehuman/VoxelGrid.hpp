@@ -122,7 +122,7 @@ int get_nearest_bone(const int index);
 
 void generate_weight_for_vertices();
 
-void export_bone_weights();
+bool export_bone_weights();
 
 private:
 void read_mesh_from_file(const std::string& filename);

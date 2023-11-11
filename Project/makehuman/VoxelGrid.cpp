@@ -300,14 +300,14 @@ void mh::VoxelGrid::generate_weight_for_vertices()
     }
 }
 
-void mh::VoxelGrid::export_bone_weights()
+bool mh::VoxelGrid::export_bone_weights()
 {
     std::cout << "Exporting bone weights..." << std::endl;
     std::ofstream fout;
 
     fout.open(weight_file);
     if (!fout) {
-        return;
+        return false;
     }
 
     fout << "# surface heat diffuse weight export." << std::endl;
@@ -321,6 +321,7 @@ void mh::VoxelGrid::export_bone_weights()
     }
 
     fout.close();
+    return true;
 }
 
 void mh::VoxelGrid::read_mesh_from_file(const std::string& filename)
