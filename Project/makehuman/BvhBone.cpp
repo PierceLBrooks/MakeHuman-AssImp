@@ -70,9 +70,9 @@ void mh::BvhBone::setPositions(const glm::mat4& modelMatrix)
         std::cout << matrix[i] << ",";
     }
     std::cout << getName() << std::endl;*/
-    if (parent != nullptr)
+    if (getChildCount() > 0)
     {
-        tail = parent->getHead();
+        tail = getChild(0)->getHead();
     }
     head = modelMatrix*glm::vec4(x, y, z, 1.0f);
 }
@@ -111,6 +111,16 @@ const glm::vec4& mh::BvhBone::getHead() const
 const glm::vec4& mh::BvhBone::getTail() const
 {
     return tail;
+}
+
+void mh::BvhBone::setHead(const glm::vec4& head)
+{
+    this->head = head;
+}
+
+void mh::BvhBone::setTail(const glm::vec4& tail)
+{
+    this->tail = tail;
 }
 
 glm::vec3 mh::BvhBone::getPosition() const

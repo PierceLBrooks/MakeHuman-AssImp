@@ -183,7 +183,17 @@ int main(int argc, char** argv)
                     }
                     else
                     {
-                        loader->visit(nullptr, [&](mh::BvhBone* bone){output << "b," << bone->getName() << "," << bone->getTail().x << "," << bone->getTail().y << "," << bone->getTail().z << "," << bone->getHead().x << "," << bone->getHead().y << "," << bone->getHead().z << std::endl; return true;});
+                        //loader->getRoot()->setTail(loader->getRoot()->getChild(0)->getHead());
+                        loader->visit(nullptr, [&](mh::BvhBone* bone)
+                        {
+                            std::string boneName = bone->getName();
+                            if ((boneName.size() > 3) && (boneName.substr(0, 3) == "End"))
+                            {
+                                return true;
+                            }
+                            output << "b," << boneName << "," << bone->getHead().x << "," << -bone->getHead().z << "," << bone->getHead().y << "," << bone->getTail().x << "," << -bone->getTail().z << "," << bone->getTail().y << std::endl;
+                            return true;
+                        });
                         output.close();
                         bone_file += extension;
                         bone_file_fix = true;

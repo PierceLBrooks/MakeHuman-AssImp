@@ -42,6 +42,8 @@ namespace mh
 	        const glm::mat4& getTranslation() const;
 	        const glm::vec4& getHead() const;
 	        const glm::vec4& getTail() const;
+	        void setHead(const glm::vec4& head);
+	        void setTail(const glm::vec4& tail);
 	        glm::vec3 getPosition() const;
 	        const std::string& getName() const;
 	        int getIdentifier() const;

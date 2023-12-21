@@ -183,7 +183,7 @@ bool mh::ObjModel::saveToFile(const std::string& filename, bool includeVertexPos
         inclusions += 1;
         for (unsigned int i = 0; i < m_vertexPositions.size(); ++i)
         {
-            output << "v" << markSeparator << m_vertexPositions[i].x << fieldSeparator << m_vertexPositions[i].y << fieldSeparator << m_vertexPositions[i].z << std::endl;
+            output << "v" << markSeparator << m_vertexPositions[i].x << fieldSeparator << -m_vertexPositions[i].z << fieldSeparator << m_vertexPositions[i].y << std::endl;
         }
     }
     if (includeVertexTextureCoordinates)

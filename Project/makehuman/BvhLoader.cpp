@@ -58,10 +58,6 @@ void mh::BvhLoader::initialize()
 
 bool mh::BvhLoader::visit(BvhBone* bone, std::function<bool(BvhBone*)> visitor)
 {
-    if (bone == root)
-    {
-        clearVisits();
-    }
     if (bone == nullptr)
     {
         if (root == nullptr)
@@ -69,6 +65,9 @@ bool mh::BvhLoader::visit(BvhBone* bone, std::function<bool(BvhBone*)> visitor)
             return false;
         }
         bone = root;
+    }
+    if (bone == root)
+    {
         clearVisits();
     }
     if (!visitor(bone))
@@ -133,6 +132,7 @@ bool mh::BvhLoader::load(const std::string& path)
         }
         if (motion != nullptr)
         {
+            setFrame(nullptr, 0);
             setFrame(root, 0);
         }
         return true;
@@ -325,9 +325,9 @@ void mh::BvhLoader::setFrame(BvhBone* bone, int frameIndex)
             return;
         }
         bone = root;
+        clearVisits();
+        resetMatrices(bone);
     }
-    clearVisits();
-    resetMatrices(bone);
     clearVisits();
     motionIndex = frameIndex*channelTotal;
     setMotion(bone, frameIndex, glm::mat4(1.0f));
