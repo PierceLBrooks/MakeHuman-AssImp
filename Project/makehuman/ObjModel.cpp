@@ -66,6 +66,11 @@ mh::ObjModel::Vertex mh::ObjModel::makeVertex(const std::string& indices)
     return vertex;
 }
 
+unsigned int mh::ObjModel::getFaceCount() const
+{
+    return m_faceData.size();
+}
+
 unsigned int mh::ObjModel::getVertexCount() const
 {
     return m_vertices.size();
@@ -79,6 +84,9 @@ void mh::ObjModel::addVertex(const Vertex& vertex)
 void mh::ObjModel::addFace(unsigned int vertex0, unsigned int vertex1, unsigned int vertex2)
 {
     FaceData face;
+    face.index0 = vertex0;
+    face.index1 = vertex1;
+    face.index2 = vertex2;
     face.position0 = m_vertices[vertex0].positionIndex;
     face.position1 = m_vertices[vertex1].positionIndex;
     face.position2 = m_vertices[vertex2].positionIndex;
@@ -301,5 +309,43 @@ bool mh::ObjModel::saveToFile(const std::string& filename, bool includeVertexPos
     }
     output.close();
     return true;
+}
+
+aiMesh* mh::ObjModel::convert()
+{
+    aiMesh* mesh = new aiMesh();
+    for (int i = 0; i < AI_MAX_NUMBER_OF_TEXTURECOORDS; ++i)
+    {
+        if (i == 0)
+        {
+            mesh->mNumUVComponents[i] = 2;
+        }
+        else
+        {
+            mesh->mNumUVComponents[i] = 0;
+        }
+    }
+    mesh->mTextureCoords[0] = new aiVector3D[getVertexCount()];
+    mesh->mNumVertices = getVertexCount();
+    mesh->mVertices = new aiVector3D[getVertexCount()];
+    mesh->mNormals = new aiVector3D[getVertexCount()];
+    for (int i = 0; i < getVertexCount(); ++i)
+    {
+        Vertex vertex = m_vertices[i];
+        mesh->mTextureCoords[0][i].Set(vertex.texCoords.x, vertex.texCoords.y, 0);
+        mesh->mVertices[i].Set(vertex.position.x, vertex.position.y, vertex.position.z);
+        mesh->mNormals[i].Set(vertex.normal.x, vertex.normal.y, vertex.normal.z);
+    }
+    mesh->mNumFaces = getFaceCount();
+    mesh->mFaces = new aiFace[getFaceCount()];
+    for (int i = 0; i < getFaceCount(); ++i)
+    {
+        mesh->mFaces[i].mNumIndices = 3;
+        mesh->mFaces[i].mIndices = new unsigned int[3];
+        mesh->mFaces[i].mIndices[0] = m_faceData[i].index0;
+        mesh->mFaces[i].mIndices[1] = m_faceData[i].index1;
+        mesh->mFaces[i].mIndices[2] = m_faceData[i].index2;
+    }
+    return mesh;
 }
 

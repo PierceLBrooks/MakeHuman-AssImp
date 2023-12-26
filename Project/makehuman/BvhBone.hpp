@@ -16,6 +16,7 @@ namespace mh
 	        int identifier;
 	        glm::vec4 head;
 	        glm::vec4 tail;
+	        glm::mat4 matrix;
 	        glm::mat4 rotation;
 	        glm::mat4 translation;
 	        std::vector<BvhBone*> children;
@@ -38,6 +39,7 @@ namespace mh
 	        void setRotation(const glm::mat4& rotation);
 	        void setTranslation(const glm::mat4& translation);
 	        void setTranslation();
+	        const glm::mat4& getMatrix() const;
 	        const glm::mat4& getRotation() const;
 	        const glm::mat4& getTranslation() const;
 	        const glm::vec4& getHead() const;

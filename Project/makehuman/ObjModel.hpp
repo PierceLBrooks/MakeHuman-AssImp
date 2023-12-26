@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <regex>
+#include <assimp/scene.h>
 #include "Vector2.hpp"
 #include "Vector3.hpp"
 
@@ -33,6 +34,9 @@ namespace mh
             struct FaceData
             {
                 public:
+                    unsigned int index0;
+                    unsigned int index1;
+                    unsigned int index2;
                     unsigned int position0;
                     unsigned int position1;
                     unsigned int position2;
@@ -47,11 +51,13 @@ namespace mh
             Vertex makeVertex(const std::string& indices);
 
         public:
+            unsigned int getFaceCount() const;
             unsigned int getVertexCount() const;
             void addVertex(const Vertex& vertex);
             void addFace(unsigned int vertex0, unsigned int vertex1, unsigned int vertex2);
             bool loadFromFile(const std::string& filename);
             bool saveToFile(const std::string& filename, bool includeVertexPositions = true, bool includeVertexTextureCoordinates = true, bool includeVertexNormals = true, bool includeFaces = true, std::string markSeparator = " ", std::string fieldSeparator = " ", std::string indexSeparator = "/");
+            aiMesh* convert();
 
         private:
             std::vector<Vector3f> m_vertexPositions;

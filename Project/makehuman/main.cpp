@@ -304,99 +304,197 @@ int main(int argc, char** argv)
                 }
                 if (!bones.empty())
                 {
+                    std::vector<mh::BvhBone*> nodes;
+                    std::map<mh::BvhBone*, aiNode*> mapping;
                     Assimp::Exporter* exporter = new Assimp::Exporter();
-                    Assimp::Importer* importer = new Assimp::Importer();
-                    if (importer->ReadFile(mesh_file, aiProcessPreset_TargetRealtime_MaxQuality|aiProcess_FlipUVs|aiProcess_LimitBoneWeights) != nullptr)
+                    aiScene* scene = new aiScene();
+                    loader->visit(nullptr, [&](mh::BvhBone* bone)
                     {
-                        aiScene* scene = importer->GetOrphanedScene();
-                        if (scene != nullptr)
+                        std::string boneName = bone->getName();
+                        if ((boneName.size() > 3) && (boneName.substr(0, 3) == "End"))
                         {
-                            aiScene* sceneOther = nullptr;
-                            aiNode* root = scene->mRootNode;
-                            if ((root != nullptr) && (loader->getRoot() != nullptr))
+                            return true;
+                        }
+                        nodes.push_back(bone);
+                        return true;
+                    });
+                    scene->mNumAnimations = 1;
+                    scene->mAnimations = new aiAnimation*[scene->mNumAnimations];
+                    scene->mAnimations[0] = new aiAnimation();
+                    scene->mAnimations[0]->mName.Set("Motion");
+                    scene->mAnimations[0]->mTicksPerSecond = 1.0/loader->getFrameTime();
+                    scene->mAnimations[0]->mDuration = static_cast<double>(std::max(0, loader->frameCount-1));
+                    scene->mAnimations[0]->mNumChannels = nodes.size();
+                    scene->mAnimations[0]->mChannels = new aiNodeAnim*[nodes.size()];
+                    for (int i = 0; i < nodes.size(); ++i)
+                    {
+                        aiNode* node = new aiNode(nodes[i]->getName());
+                        node->mNumChildren = nodes[i]->getChildCount();
+                        if (node->mNumChildren > 0)
+                        {
+                            node->mChildren = new aiNode*[node->mNumChildren];
+                            for (int j = 0; j < node->mNumChildren; ++j)
                             {
-                                root = new aiNode(std::string("_"));
-                                root->mNumChildren = 2;
-                                root->mChildren = new aiNode*[2];
-                                root->mChildren[0] = new aiNode(loader->getRoot()->getName());
-                                root->mChildren[1] = scene->mRootNode;
-                                root->mChildren[0]->mParent = root;
-                                scene->mRootNode->mParent = root;
-                                scene->mRootNode = root;
-                                root = root->mChildren[0];
+                                node->mChildren[j] = nullptr;
                             }
-                            if (scene->mNumMeshes > 0)
+                        }
+                        mapping[nodes[i]] = node;
+                        if (nodes[i]->getParent() != nullptr)
+                        {
+                            node->mParent = mapping[nodes[i]->getParent()];
+                            for (int j = 0; j < node->mParent->mNumChildren; ++j)
                             {
-                                aiMesh* mesh = scene->mMeshes[0];
-                                if (mesh->mNumBones == 0)
+                                if (node->mParent->mChildren[j] == nullptr)
                                 {
-                                    mesh->mNumBones = static_cast<unsigned int>(boneNames.size());
-                                    mesh->mBones = new aiBone*[mesh->mNumBones];
-                                    for (unsigned int i = 0; i < mesh->mNumBones; ++i)
+                                    node->mParent->mChildren[j] = node;
+                                    break;
+                                }
+                            }
+                        }
+                        scene->mAnimations[0]->mChannels[i] = nullptr;
+                    }
+                    for (int i = 0; i < nodes.size(); ++i)
+                    {
+                        aiNodeAnim* animation = new aiNodeAnim();
+                        scene->mAnimations[0]->mChannels[i] = animation;
+                        //animation->mName.Set(nodes[i]->getName().c_str());
+                        if (nodes[i]->getChannelCount() == 6)
+                        {
+                            animation->mNumPositionKeys = loader->frameCount;
+                            animation->mPositionKeys = new aiVectorKey[loader->frameCount];
+                            for (int j = 0; j < loader->frameCount; ++j)
+                            {
+                                int motionIndex = j*loader->channelTotal;
+                                int* channelOrder = nodes[i]->channelOrder;
+                                animation->mPositionKeys[j].mTime = static_cast<double>(j);
+                                for (int k = 0; k < i; ++k)
+                                {
+                                    motionIndex += nodes[k]->getChannelCount();
+                                }
+                                for (int k = 0; k < nodes[i]->getChannelCount(); ++k)
+                                {
+                                    if (channelOrder[k] == MH_BONE_X_POS)
                                     {
-                                        unsigned int j = 0;
-                                        aiBone* bone = new aiBone();
-                                        mesh->mBones[i] = bone;
-                                        bone->mName.Set(boneNames[i].c_str());
-                                        bone->mNumWeights = static_cast<unsigned int>(bones[boneNames[i]].size());
-                                        bone->mWeights = new aiVertexWeight[bone->mNumWeights];
-                                        for (auto iter = bones[boneNames[i]].begin(); iter != bones[boneNames[i]].end(); iter++)
-                                        {
-                                            bone->mWeights[j].mVertexId = iter->first;
-                                            bone->mWeights[j].mWeight = iter->second;
-                                            j++;
-                                        }
+                                        animation->mPositionKeys[j].mValue.x = loader->motion[motionIndex];
                                     }
-                                }
-                            }
-                            if (bone_file_fix)
-                            {
-                                bone_file = bone_file.substr(0, bone_file.size()-4);
-                                delete importer;
-                                importer = new Assimp::Importer();
-                                if (importer->ReadFile(bone_file, aiProcessPreset_TargetRealtime_MaxQuality|aiProcess_FlipUVs|aiProcess_LimitBoneWeights) != nullptr)
-                                {
-                                    sceneOther = importer->GetOrphanedScene();
-                                    if (sceneOther != nullptr)
+                                    else if (channelOrder[k] == MH_BONE_Y_POS)
                                     {
-                                        if ((sceneOther->mRootNode != nullptr) && (root != nullptr) && (loader->getRoot() != nullptr))
-                                        {
-                                            if ((strcmp(sceneOther->mRootNode->mName.C_Str(), root->mName.C_Str()) == 0) && (strcmp(loader->getRoot()->getName().c_str(), root->mName.C_Str()) == 0))
-                                            {
-                                                if ((root->mParent == scene->mRootNode) && (root == scene->mRootNode->mChildren[0]))
-                                                {
-                                                    delete root;
-                                                    root = sceneOther->mRootNode;
-                                                    scene->mRootNode->mChildren[0] = root;
-                                                }
-                                            }
-                                        }
-                                        scene->mNumAnimations = sceneOther->mNumAnimations;
-                                        scene->mAnimations = sceneOther->mAnimations;
+                                        animation->mPositionKeys[j].mValue.y = loader->motion[motionIndex];
                                     }
+                                    else if (channelOrder[k] == MH_BONE_Z_POS)
+                                    {
+                                        animation->mPositionKeys[j].mValue.z = loader->motion[motionIndex];
+                                    }
+                                    ++motionIndex;
                                 }
                             }
-                            exporter->Export(scene, "gltf2", mesh_file+".gltf");
-                            if (sceneOther != nullptr)
+                        }
+                        else
+                        {
+                            animation->mNumPositionKeys = 1;
+                            animation->mPositionKeys = new aiVectorKey[animation->mNumPositionKeys];
+                            animation->mPositionKeys[0].mTime = 0.0;
+                            animation->mPositionKeys[0].mValue.Set(0.0f, 0.0f, 0.0f);
+                        }
+                        animation->mNumRotationKeys = loader->frameCount;
+                        animation->mRotationKeys = new aiQuatKey[loader->frameCount];
+                        for (int j = 0; j < loader->frameCount; ++j)
+                        {
+                            aiMatrix4x4 matrix;
+                            aiMatrix3x3 rotation;
+                            bool success = false;
+                            float angle = 0.0f;
+                            int motionIndex = j*loader->channelTotal;
+                            int* channelOrder = nodes[i]->channelOrder;
+                            animation->mRotationKeys[j].mTime = static_cast<double>(j);
+                            for (int k = 0; k < i; ++k)
                             {
-                                if ((root == sceneOther->mRootNode) && (loader->getRoot() != nullptr))
-                                {
-                                    root = new aiNode(loader->getRoot()->getName());
-                                    scene->mRootNode->mChildren[0] = root;
-                                }
-                                delete sceneOther;
+                                motionIndex += nodes[k]->getChannelCount();
                             }
-                            scene->mNumAnimations = 0;
-                            scene->mAnimations = nullptr;
-                            delete scene;
+                            for (int k = 0; k < nodes[i]->getChannelCount(); ++k)
+                            {
+                                success = true;
+                                if (channelOrder[k] == MH_BONE_X_ROT)
+                                {
+                                    angle = glm::radians(loader->motion[motionIndex]);
+                                    aiMatrix4x4::RotationX(angle, matrix);
+                                    rotation *= aiMatrix3x3(matrix);
+                                }
+                                else if (channelOrder[k] == MH_BONE_Y_ROT)
+                                {
+                                    angle = glm::radians(loader->motion[motionIndex]);
+                                    aiMatrix4x4::RotationY(angle, matrix);
+                                    rotation *= aiMatrix3x3(matrix);
+                                }
+                                else if (channelOrder[k] == MH_BONE_Z_ROT)
+                                {
+                                    angle = glm::radians(loader->motion[motionIndex]);
+                                    aiMatrix4x4::RotationZ(angle, matrix);
+                                    rotation *= aiMatrix3x3(matrix);
+                                }
+                                else
+                                {
+                                    success = false;
+                                }
+                                ++motionIndex;
+                            }
+                            if (success)
+                            {
+                                animation->mRotationKeys[j].mValue = aiQuaternion(rotation);
+                            }
+                            /*else
+                            {
+                                animation->mRotationKeys[j].mValue.Set(0.0f, 0.0f, 0.0f, 1.0f);
+                            }*/
+                        }
+                        animation->mNumScalingKeys = 1;
+                        animation->mScalingKeys = new aiVectorKey[animation->mNumScalingKeys];
+                        animation->mScalingKeys[0].mTime = 0.0;
+                        animation->mScalingKeys[0].mValue.Set(1.0f, 1.0f, 1.0f);
+                    }
+                    if (bone_file_fix)
+                    {
+                        bone_file = bone_file.substr(0, bone_file.size()-4);
+                    }
+                    scene->mRootNode = new aiNode(std::string("_"));
+                    scene->mRootNode->mNumChildren = 2;
+                    scene->mRootNode->mChildren = new aiNode*[scene->mRootNode->mNumChildren];
+                    scene->mRootNode->mChildren[0] = mapping[nodes.front()];
+                    scene->mRootNode->mChildren[1] = new aiNode(std::string("Mesh"));
+                    scene->mRootNode->mChildren[0]->mParent = scene->mRootNode;
+                    scene->mRootNode->mChildren[1]->mParent = scene->mRootNode;
+                    scene->mRootNode->mChildren[1]->mNumMeshes = 1;
+                    scene->mRootNode->mChildren[1]->mMeshes = new unsigned int[scene->mRootNode->mChildren[1]->mNumMeshes];
+                    scene->mRootNode->mChildren[1]->mMeshes[0] = 0;
+                    scene->mNumMeshes = 1;
+                    scene->mMeshes = new aiMesh*[scene->mNumMeshes];
+                    scene->mMeshes[0] = model->convert();
+                    scene->mMeshes[0]->mNumBones = nodes.size();
+                    scene->mMeshes[0]->mBones = new aiBone*[nodes.size()];
+                    for (int i = 0; i < nodes.size(); ++i)
+                    {
+                        int j = 0;
+                        std::map<unsigned int, float> weights;
+                        aiBone* bone = new aiBone();
+                        weights = bones[nodes[i]->getName()];
+                        scene->mMeshes[0]->mBones[i] = bone;
+                        bone->mName.Set(nodes[i]->getName().c_str());
+                        bone->mOffsetMatrix = convertGlmMat4ToAiMatrix4x4(nodes[i]->getMatrix());
+                        bone->mNumWeights = weights.size();
+                        bone->mWeights = new aiVertexWeight[weights.size()];
+                        for (std::map<unsigned int, float>::iterator k = weights.begin(); k != weights.end(); ++k)
+                        {
+                            bone->mWeights[j].mVertexId = k->first;
+                            bone->mWeights[j].mWeight = k->second;
+                            ++j;
                         }
                     }
+                    exporter->Export(scene, "gltf2", mesh_file+".gltf");
+                    delete scene;
                     delete exporter;
-                    delete importer;
                 }
             }
         }
-
         if (loader != nullptr)
         {
             delete loader;
@@ -407,7 +505,6 @@ int main(int argc, char** argv)
             delete model;
             model = nullptr;
         }
-
         return 0;
     }
     for (int i = 0; i < argc; ++i)

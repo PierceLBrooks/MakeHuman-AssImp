@@ -11,6 +11,7 @@ mh::BvhBone::BvhBone()
     channelOrder = nullptr;
     identifier = -1;
     name = "";
+	matrix = glm::mat4(1.0f);
 	rotation = glm::mat4(1.0f);
 	translation = glm::mat4(1.0f);
 	head = glm::vec4(x, y, z, 1.0f);
@@ -75,6 +76,7 @@ void mh::BvhBone::setPositions(const glm::mat4& modelMatrix)
         tail = getChild(0)->getHead();
     }
     head = modelMatrix*glm::vec4(x, y, z, 1.0f);
+    matrix = modelMatrix;
 }
 
 void mh::BvhBone::setRotation(const glm::mat4& rotation)
@@ -91,6 +93,11 @@ void mh::BvhBone::setTranslation()
 {
 	glm::mat4 translation = glm::mat4(1.0f);
 	this->translation = glm::translate(translation, getPosition());
+}
+
+const glm::mat4& mh::BvhBone::getMatrix() const
+{
+	return matrix;
 }
 
 const glm::mat4& mh::BvhBone::getRotation() const
