@@ -451,6 +451,18 @@ int main(int argc, char** argv)
                         animation->mScalingKeys = new aiVectorKey[animation->mNumScalingKeys];
                         animation->mScalingKeys[0].mTime = 0.0;
                         animation->mScalingKeys[0].mValue.Set(1.0f, 1.0f, 1.0f);
+                        for (int j = 0; j < nodes[i]->getChildCount(); ++j)
+                        {
+                            if (mapping[nodes[i]]->mChildren[j] == nullptr)
+                            {
+                                --mapping[nodes[i]]->mNumChildren;
+                            }
+                        }
+                        if ((mapping[nodes[i]]->mNumChildren == 0) && (mapping[nodes[i]]->mChildren != nullptr))
+                        {
+                            delete[] mapping[nodes[i]]->mChildren;
+                            mapping[nodes[i]]->mChildren = nullptr;
+                        }
                     }
                     if (bone_file_fix)
                     {
@@ -489,7 +501,12 @@ int main(int argc, char** argv)
                             ++j;
                         }
                     }
-                    exporter->Export(scene, "gltf2", mesh_file+".gltf");
+                    result = exporter->Export(scene, "gltf2", (mesh_file+".gltf").c_str());
+                    std::cout << result << std::endl;
+                    if (result != AI_SUCCESS)
+                    {
+                        std::cout << exporter->GetErrorString() << std::endl;
+                    }
                     delete scene;
                     delete exporter;
                 }
@@ -505,22 +522,39 @@ int main(int argc, char** argv)
             delete model;
             model = nullptr;
         }
-        return 0;
-    }
-    for (int i = 0; i < argc; ++i)
-    {
-        if ((i != 0) && (strstr(argv[i], ".bvh") != NULL) && (strstr(argv[i], ".obj") != NULL))
+        if (result != AI_SUCCESS)
         {
-            continue;
+            if (result > 0)
+            {
+                result = -result;
+            }
         }
-        args.push_back(std::string(argv[i]));
-        //std::cout << args.back() << std::endl;
+        else
+        {
+            result = argc;
+        }
     }
-    if (argc >= 3)
+    if (result == 0)
     {
-        result = run(args);
+        for (int i = 0; i < argc; ++i)
+        {
+            if ((i != 0) && (strstr(argv[i], ".bvh") != NULL) && (strstr(argv[i], ".obj") != NULL))
+            {
+                continue;
+            }
+            args.push_back(std::string(argv[i]));
+            //std::cout << args.back() << std::endl;
+        }
+        if (argc >= 3)
+        {
+            result = run(args);
+        }
     }
-    //std::cout << std::to_string(result) << std::endl;
+    std::cout << std::to_string(result) << std::endl;
+    if (result > 0)
+    {
+        result = 0;
+    }
     return result;
 }
 
