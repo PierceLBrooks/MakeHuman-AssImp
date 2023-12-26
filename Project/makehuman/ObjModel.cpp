@@ -314,6 +314,7 @@ bool mh::ObjModel::saveToFile(const std::string& filename, bool includeVertexPos
 aiMesh* mh::ObjModel::convert()
 {
     aiMesh* mesh = new aiMesh();
+    mesh->mPrimitiveTypes = aiPrimitiveType_TRIANGLE;
     for (int i = 0; i < AI_MAX_NUMBER_OF_TEXTURECOORDS; ++i)
     {
         if (i == 0)

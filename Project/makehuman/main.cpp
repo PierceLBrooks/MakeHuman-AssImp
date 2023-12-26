@@ -7,6 +7,7 @@
 #include <vector>
 #include <sstream>
 #include <iostream>
+#include <assimp/DefaultLogger.hpp>
 #include <assimp/Exporter.hpp>
 #include <assimp/Importer.hpp>
 #include <assimp/SceneCombiner.h>
@@ -139,6 +140,8 @@ int main(int argc, char** argv)
     mh::BvhLoader* loader = nullptr;
     std::vector<std::string> args;
 
+    Assimp::DefaultLogger::create((std::string(argv[0])+".log").c_str(), Assimp::Logger::VERBOSE);
+
     std::cout << argc << std::endl;
 
     if (argc == 11)
@@ -251,10 +254,9 @@ int main(int argc, char** argv)
 
         ends = time(NULL);
         int seconds_elapsed = (int)(ends - start);
-        std::cout << "Running Time : " << seconds_elapsed / 60 << " minutes and "
-                  << seconds_elapsed % 60 << " seconds" << std::endl;
+        std::cout << "Running Time: " << seconds_elapsed / 60 << " minutes and " << seconds_elapsed % 60 << " seconds" << std::endl;
 
-        if ((loader != nullptr) && (model != nullptr))
+        if ((loader != nullptr) && (loader->boneCount > 0) && (model != nullptr) && (model->getVertexCount() > 0) && (model->getFaceCount() > 0))
         {
             std::ifstream input;
             input.open(weight_file);
@@ -286,6 +288,10 @@ int main(int argc, char** argv)
                         {
                             boneNames.push_back(splits.back());
                             bones[boneNames.back()] = std::map<unsigned int, float>();
+                            for (int i = 1; i <= max_influence; ++i)
+                            {
+                                bones[boneNames.back()][std::min(static_cast<unsigned int>(i), model->getVertexCount())-1] = 0.0f;
+                            }
                         }
                     }
                     else if ((splits.front() == "w") && (splits.size() > 3))
@@ -351,6 +357,7 @@ int main(int argc, char** argv)
                                 }
                             }
                         }
+                        node->mTransformation = aiMatrix4x4(1.0f, 0.0f, 0.0f, nodes[i]->getPosition()[0], 0.0f, 1.0f, 0.0f, nodes[i]->getPosition()[1], 0.0f, 0.0f, 1.0f, nodes[i]->getPosition()[2], 0.0f, 0.0f, 0.0f, 1.0f);
                         scene->mAnimations[0]->mChannels[i] = nullptr;
                     }
                     for (int i = 0; i < nodes.size(); ++i)
@@ -394,7 +401,7 @@ int main(int argc, char** argv)
                             animation->mNumPositionKeys = 1;
                             animation->mPositionKeys = new aiVectorKey[animation->mNumPositionKeys];
                             animation->mPositionKeys[0].mTime = 0.0;
-                            animation->mPositionKeys[0].mValue.Set(0.0f, 0.0f, 0.0f);
+                            animation->mPositionKeys[0].mValue.Set(mapping[nodes[i]]->mTransformation.a4, mapping[nodes[i]]->mTransformation.b4, mapping[nodes[i]]->mTransformation.c4);
                         }
                         animation->mNumRotationKeys = loader->frameCount;
                         animation->mRotationKeys = new aiQuatKey[loader->frameCount];
@@ -481,26 +488,46 @@ int main(int argc, char** argv)
                     scene->mNumMeshes = 1;
                     scene->mMeshes = new aiMesh*[scene->mNumMeshes];
                     scene->mMeshes[0] = model->convert();
+                    scene->mMeshes[0]->mName.Set("Mesh");
                     scene->mMeshes[0]->mNumBones = nodes.size();
                     scene->mMeshes[0]->mBones = new aiBone*[nodes.size()];
                     for (int i = 0; i < nodes.size(); ++i)
                     {
                         int j = 0;
-                        std::map<unsigned int, float> weights;
                         aiBone* bone = new aiBone();
+                        std::map<unsigned int, float> weights;
                         weights = bones[nodes[i]->getName()];
                         scene->mMeshes[0]->mBones[i] = bone;
                         bone->mName.Set(nodes[i]->getName().c_str());
                         bone->mOffsetMatrix = convertGlmMat4ToAiMatrix4x4(nodes[i]->getMatrix());
+                        if (weights.empty())
+                        {
+                            for (int k = 1; k <= max_influence; ++k)
+                            {
+                                weights[std::min(static_cast<unsigned int>(k), model->getVertexCount())-1] = 0.0f;
+                            }
+                        }
                         bone->mNumWeights = weights.size();
                         bone->mWeights = new aiVertexWeight[weights.size()];
                         for (std::map<unsigned int, float>::iterator k = weights.begin(); k != weights.end(); ++k)
                         {
+                            if (k->first >= model->getVertexCount())
+                            {
+                                bone->mNumWeights -= 1;
+                                continue;
+                            }
                             bone->mWeights[j].mVertexId = k->first;
                             bone->mWeights[j].mWeight = k->second;
                             ++j;
                         }
+                        if (bone->mNumWeights == 0)
+                        {
+                            delete[] bone->mWeights;
+                            bone->mWeights = nullptr;
+                        }
                     }
+                    std::cout << model->getVertexCount() << std::endl;
+                    std::cout << model->getFaceCount() << std::endl;
                     result = exporter->Export(scene, "gltf2", (mesh_file+".gltf").c_str());
                     std::cout << result << std::endl;
                     if (result != AI_SUCCESS)
@@ -555,6 +582,7 @@ int main(int argc, char** argv)
     {
         result = 0;
     }
+    Assimp::DefaultLogger::kill();
     return result;
 }
 
