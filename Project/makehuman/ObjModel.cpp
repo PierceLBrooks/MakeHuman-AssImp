@@ -177,13 +177,18 @@ bool mh::ObjModel::loadFromFile(const std::string& filename)
     return true;
 }
 
-bool mh::ObjModel::saveToFile(const std::string& filename, bool includeVertexPositions, bool includeVertexTextureCoordinates, bool includeVertexNormals, bool includeFaces, std::string markSeparator, std::string fieldSeparator, std::string indexSeparator)
+bool mh::ObjModel::saveToFile(const std::string& filename, bool includeVertexPositions, bool includeVertexTextureCoordinates, bool includeVertexNormals, bool includeVertexWeights, bool includeFaces, std::string markSeparator, std::string fieldSeparator, std::string indexSeparator, std::map<unsigned int, std::map<unsigned int, float>>* weights)
 {
     unsigned int inclusions = 0;
     std::ofstream output;
     output.open(filename);
     if (!output.is_open())
     {
+        return false;
+    }
+    if ((includeVertexWeights) && (weights == nullptr))
+    {
+        output.close();
         return false;
     }
     if (includeVertexPositions)
@@ -208,6 +213,22 @@ bool mh::ObjModel::saveToFile(const std::string& filename, bool includeVertexPos
         for (unsigned int i = 0; i < m_vertexNormals.size(); ++i)
         {
             output << "vn" << markSeparator << m_vertices[i].normal.x << fieldSeparator << m_vertexNormals[i].y << fieldSeparator << m_vertexNormals[i].z << std::endl;
+        }
+    }
+    if (includeVertexWeights)
+    {
+        for (std::map<unsigned int, std::map<unsigned int, float>>::iterator i = weights->begin(); i != weights->end(); ++i)
+        {
+            if (i->second.empty())
+            {
+                continue;
+            }
+            output << "vw" << markSeparator << i->first;
+            for (std::map<unsigned int, float>::iterator j = i->second.begin(); j != i->second.end(); ++j)
+            {
+                output << fieldSeparator << j->first << fieldSeparator << j->second;
+            }
+            output << std::endl;
         }
     }
     if ((includeFaces) && (inclusions > 0))

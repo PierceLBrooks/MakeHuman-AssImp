@@ -219,7 +219,7 @@ int main(int argc, char** argv)
                 else
                 {
                     extension = ".txt";
-                    if (!model->saveToFile(mesh_file+extension, true, false, false, true, ",", ",", ","))
+                    if (!model->saveToFile(mesh_file+extension, true, false, false, false, true, ",", ",", ","))
                     {
                         delete model;
                         model = nullptr;
@@ -533,6 +533,29 @@ int main(int argc, char** argv)
                     if (result != AI_SUCCESS)
                     {
                         std::cout << exporter->GetErrorString() << std::endl;
+                    }
+                    else
+                    {
+                        std::map<unsigned int, std::map<unsigned int, float>> weights;
+                        for (int i = 0; i < scene->mMeshes[0]->mNumBones; ++i)
+                        {
+                            for (int j = 0; j < scene->mMeshes[0]->mBones[i]->mNumWeights; ++j)
+                            {
+                                if (scene->mMeshes[0]->mBones[i]->mWeights[j].mWeight <= 0.0f)
+                                {
+                                    continue;
+                                }
+                                if (weights.find(scene->mMeshes[0]->mBones[i]->mWeights[j].mVertexId) == weights.end())
+                                {
+                                    weights[scene->mMeshes[0]->mBones[i]->mWeights[j].mVertexId] = std::map<unsigned int, float>();
+                                }
+                                weights[scene->mMeshes[0]->mBones[i]->mWeights[j].mVertexId][i] = scene->mMeshes[0]->mBones[i]->mWeights[j].mWeight;
+                            }
+                        }
+                        if (!model->saveToFile(mesh_file+".gltf.obj", true, false, false, true, true, " ", " ", "/", &weights))
+                        {
+                            std::cout << "TinyObjLoader" << std::endl;
+                        }
                     }
                     delete scene;
                     delete exporter;

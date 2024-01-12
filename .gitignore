@@ -1,6 +1,7 @@
 /build
 /install
 /Distribution
+/*.gltf.obj
 /*.gltf
 /*.glb
 /*.bin

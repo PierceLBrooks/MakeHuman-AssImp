@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <regex>
+#include <map>
 #include <assimp/scene.h>
 #include "Vector2.hpp"
 #include "Vector3.hpp"
@@ -56,7 +57,7 @@ namespace mh
             void addVertex(const Vertex& vertex);
             void addFace(unsigned int vertex0, unsigned int vertex1, unsigned int vertex2);
             bool loadFromFile(const std::string& filename);
-            bool saveToFile(const std::string& filename, bool includeVertexPositions = true, bool includeVertexTextureCoordinates = true, bool includeVertexNormals = true, bool includeFaces = true, std::string markSeparator = " ", std::string fieldSeparator = " ", std::string indexSeparator = "/");
+            bool saveToFile(const std::string& filename, bool includeVertexPositions = true, bool includeVertexTextureCoordinates = true, bool includeVertexNormals = true, bool includeVertexWeights = false, bool includeFaces = true, std::string markSeparator = " ", std::string fieldSeparator = " ", std::string indexSeparator = "/", std::map<unsigned int, std::map<unsigned int, float>>* weights = nullptr);
             aiMesh* convert();
 
         private:
