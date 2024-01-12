@@ -2,6 +2,7 @@
 #define MH_BVH_LOADER_HPP
 
 #include <string>
+#include <vector>
 #include <fstream>
 #include <functional>
 #include "BvhBone.hpp"
@@ -22,6 +23,7 @@ namespace mh
             bool status;
             std::ifstream* reader;
             BvhBone* root;
+            std::vector<BvhBone*> bones;
             void initialize();
             bool readBoneMotion(double* frameTime = nullptr);
             BvhBone* readBoneRelation(std::ifstream& fileReader);

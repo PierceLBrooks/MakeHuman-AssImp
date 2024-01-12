@@ -6,6 +6,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
 #include <string>
+#include <map>
 
 namespace mh
 {
@@ -20,6 +21,7 @@ namespace mh
 	        glm::mat4 rotation;
 	        glm::mat4 translation;
 	        std::vector<BvhBone*> children;
+	        std::map<int, float*> motion;
 	        int channelCount;
 	    protected:
 	        BvhBone* parent;
@@ -30,6 +32,8 @@ namespace mh
 	        int* channelOrder;
 	        BvhBone();
 	        virtual ~BvhBone();
+	        void addMotion(int frameIndex, float* motion);
+	        float* getMotion(int frameIndex);
 	        void setName(const std::string& name);
 	        void setChannelCount(int channelCount);
 	        void setIdentifier(int identifier);

@@ -21,6 +21,10 @@ mh::BvhBone::BvhBone()
 
 mh::BvhBone::~BvhBone()
 {
+    for (std::map<int, float*>::iterator i = motion.begin(); i != motion.end(); ++i)
+    {
+        delete[] i->second;
+    }
     if (channelOrder != nullptr)
     {
         delete[] channelOrder;
@@ -31,6 +35,28 @@ mh::BvhBone::~BvhBone()
         delete children[i];
     }
     children.clear();
+}
+
+void mh::BvhBone::addMotion(int frameIndex, float* motion)
+{
+    if (this->motion.find(frameIndex) != this->motion.end())
+    {
+        return;
+    }
+    this->motion[frameIndex] = new float[getChannelCount()];
+    for (int i = 0; i < getChannelCount(); ++i)
+    {
+        this->motion[frameIndex][i] = motion[i];
+    }
+}
+
+float* mh::BvhBone::getMotion(int frameIndex)
+{
+    if (motion.find(frameIndex) == motion.end())
+    {
+        return nullptr;
+    }
+    return motion[frameIndex];
 }
 
 void mh::BvhBone::setName(const std::string& name)

@@ -108,7 +108,12 @@
             <default><quit></quit></default>
           </switch>
         </generator>
-        <definitions></definitions>
+        <definitions>
+          <definition>
+            <key>MH_SUPPORT_ANIMATION_EXPORT</key>
+            <value>1</value>
+          </definition>
+        </definitions>
         <links>
           <link>*glm*</link>
           <link>*assimp*</link>

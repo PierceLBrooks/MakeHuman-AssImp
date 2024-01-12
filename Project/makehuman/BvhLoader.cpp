@@ -125,6 +125,11 @@ bool mh::BvhLoader::load(const std::string& path)
                 break;
             }
         }
+        visit(nullptr, [&](BvhBone* bone)
+        {
+            bones.push_back(bone);
+            return true;
+        });
         if ((root == nullptr) || (!readBoneMotion(&frameTime)) || (!reader->good()))
         {
             status = false;
@@ -145,7 +150,10 @@ bool mh::BvhLoader::load(const std::string& path)
 
 bool mh::BvhLoader::readBoneMotion(double* frameTime)
 {
+    int offset = 0;
     int index = 0;
+    int boneIndex = 0;
+    int frameCounter = 0;
     std::string temp = "";
     while (reader->good())
     {
@@ -165,6 +173,10 @@ bool mh::BvhLoader::readBoneMotion(double* frameTime)
         delete[] motion;
     }
     motion = new float[frameCount*channelTotal];
+    for (int i = 0; i < frameCount*channelTotal; ++i)
+    {
+        motion[i] = 0.0f;
+    }
     *reader >> temp >> temp >> this->frameTime;
     if (frameTime != nullptr)
     {
@@ -173,7 +185,30 @@ bool mh::BvhLoader::readBoneMotion(double* frameTime)
     while ((index != frameCount*channelTotal) && (reader->good()))
     {
         *reader >> motion[index];
+        //std::cout << motion[index] << " " << index << " " << offset << " " << boneIndex << " " << bones[boneIndex]->getChannelCount() << std::endl;
         ++index;
+        if (boneIndex < bones.size())
+        {
+            if (index-offset == bones[boneIndex]->getChannelCount())
+            {
+                //std::cout << bones[boneIndex]->getName() << " @ " << index << std::endl;
+                bones[boneIndex]->addMotion(frameCounter, motion+(index-bones[boneIndex]->getChannelCount()));
+                do
+                {
+                    ++boneIndex;
+                    if (boneIndex >= bones.size())
+                    {
+                        break;
+                    }
+                } while (bones[boneIndex]->getChannelCount() == 0);
+                offset = index;
+            }
+        }
+        if (index%channelTotal == 0)
+        {
+            boneIndex = 0;
+            ++frameCounter;
+        }
     }
     if (!reader->good())
     {
@@ -329,6 +364,10 @@ void mh::BvhLoader::setFrame(BvhBone* bone, int frameIndex)
         resetMatrices(bone);
     }
     clearVisits();
+    if (frameIndex >= frameCount)
+    {
+        return;
+    }
     motionIndex = frameIndex*channelTotal;
     setMotion(bone, frameIndex, glm::mat4(1.0f));
 }
